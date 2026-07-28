@@ -118,6 +118,91 @@ Every subcommand supports `--json` for scripting/report integration.
     - Estimated crackable in 2.3 days under an offline single-GPU attack.
 ```
 
+## Full Command Reference
+
+Every subcommand accepts `-p/--password` (omit it to be prompted securely
+via `getpass` instead of typing it in plaintext) and `--json` for
+machine-readable output.
+
+| Command | Required flags | Optional flags | Purpose |
+|---|---|---|---|
+| `strength` | — | `-p`, `--json` | Entropy + pattern-based strength score. |
+| `breach` | — | `-p`, `--json` | HIBP k-Anonymity breach lookup (network required). |
+| `hashid` | `-H/--hash-value` | `--json` | Identify likely hash type from a hash string. |
+| `wordlist` | `-w/--wordlist` | `-p`, `-f/--passwords-file`, `--case-sensitive`, `--csv`, `--json` | Offline wordlist audit, single or batch. |
+| `policy` | — | `-p`, `--preset {nist800_63b,legacy_complexity}`, `--context`, `--json` | Policy compliance check. |
+| `risk` | — | `-p`, `--preset`, `--online`, `--hash-type`, `--json` | Composite Password Risk Score (CPRS). |
+| `cracktime` | — | `-p`, `--hash-type`, `--json` | Time-to-crack across 3 attacker scenarios. |
+| `org-audit` | `-i/--input-file` | `--preset`, `--top-n`, `--html`, `--json` | Batch-score an account export, optional HTML report. |
+| `audit` | — | `-p`, `--preset`, `--online`, `--wordlist`, `--json` | Legacy full pipeline (strength + policy + optional breach/wordlist). |
+
+### `chronos strength`
+```
+usage: chronos strength [-h] [-p PASSWORD] [--json]
+```
+
+### `chronos breach`
+```
+usage: chronos breach [-h] [-p PASSWORD] [--json]
+```
+
+### `chronos hashid`
+```
+usage: chronos hashid [-h] -H HASH_VALUE [--json]
+```
+
+### `chronos wordlist`
+```
+usage: chronos wordlist [-h] -w WORDLIST [-p PASSWORD] [-f PASSWORDS_FILE]
+                         [--case-sensitive] [--csv CSV] [--json]
+```
+
+### `chronos policy`
+```
+usage: chronos policy [-h] [-p PASSWORD]
+                       [--preset {nist800_63b,legacy_complexity}]
+                       [--context CONTEXT] [--json]
+```
+`--context` takes a comma-separated list of forbidden terms to check for
+(e.g. `--context "acmecorp,jdoe"` flags passwords containing the company
+name or username).
+
+### `chronos risk`
+```
+usage: chronos risk [-h] [-p PASSWORD]
+                     [--preset {nist800_63b,legacy_complexity}] [--online]
+                     [--hash-type HASH_TYPE] [--json]
+```
+`--online` additionally runs the HIBP breach check (network required);
+without it, breach status is treated as "unknown" and contributes a fixed
+residual risk (see the CPRS methodology above). `--hash-type` feeds the
+crack-time sub-score — use whatever `chronos hashid` identified for the
+target hash (e.g. `bcrypt`, `MD5`, `SHA-256`, `NTLM`, `Argon2`).
+
+### `chronos cracktime`
+```
+usage: chronos cracktime [-h] [-p PASSWORD] [--hash-type HASH_TYPE] [--json]
+```
+
+### `chronos org-audit`
+```
+usage: chronos org-audit [-h] -i INPUT_FILE
+                          [--preset {nist800_63b,legacy_complexity}]
+                          [--top-n TOP_N] [--html HTML] [--json]
+```
+`-i/--input-file` expects one `identifier:password` pair per line (a bare
+password per line also works, with the password reused as its own
+identifier). `--top-n` controls how many highest-risk accounts appear in
+the report's "Highest-Risk Accounts" table (default 10). `--html` writes
+the full report; omit it to only print the terminal summary.
+
+### `chronos audit`
+```
+usage: chronos audit [-h] [-p PASSWORD]
+                      [--preset {nist800_63b,legacy_complexity}] [--online]
+                      [--wordlist WORDLIST] [--json]
+```
+
 ## Running tests
 
 ```bash
